@@ -1,0 +1,136 @@
+<div class="space-y-5">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 style="font-family: 'Manrope', sans-serif; font-size: 1.75rem; font-weight: 800;">Clientes</h1>
+      <p class="text-sm mt-1" style="color: var(--on-surface-variant);">{{ total }} clientes cadastrados</p>
+    </div>
+  </div>
+
+  <!-- Search -->
+  <div class="card p-4">
+    <div class="search-bar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#afacac" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Buscar por nome ou e-mail..." [(ngModel)]="searchQuery" (input)="onSearch()">
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="card p-12 flex items-center justify-center gap-3" style="color: var(--on-surface-variant);">
+    <svg class="animate-spin" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+    Carregando clientes...
+  </div>
+
+  <!-- Table -->
+  <div *ngIf="!isLoading" class="card overflow-hidden">
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>CLIENTE</th>
+            <th>E-MAIL</th>
+            <th>PEDIDOS</th>
+            <th>TOTAL GASTO</th>
+            <th>CADASTRO</th>
+            <th>ROLE</th>
+            <th>STATUS</th>
+            <th>AÇÕES</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of customers">
+            <td>
+              <div class="flex items-center gap-2">
+                <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #004be3, #819bff); color: white; font-size: 0.7rem;">
+                  {{ c.name.charAt(0) }}
+                </div>
+                <span class="font-medium text-sm">{{ c.name }}</span>
+              </div>
+            </td>
+            <td><span class="text-sm" style="color: var(--on-surface-variant);">{{ c.email }}</span></td>
+            <td><span class="font-semibold text-sm">{{ c.totalOrders }}</span></td>
+            <td><span class="font-semibold text-sm" style="color: #004be3;">{{ c.totalSpent | currencyBr }}</span></td>
+            <td><span class="text-sm" style="color: var(--on-surface-variant);">{{ c.createdAt | date:'dd/MM/yyyy' }}</span></td>
+            <td>
+              <span class="status-badge" [ngClass]="c.role === 'admin' ? 'status-cancelled' : c.role === 'staff' ? 'status-processing' : 'status-delivered'">
+                {{ c.role }}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge" [class]="c.isActive ? 'status-delivered' : 'status-cancelled'">
+                {{ c.isActive ? 'Ativo' : 'Inativo' }}
+              </span>
+            </td>
+            <td>
+              <div class="flex items-center gap-1">
+                <button class="btn-ghost btn-sm text-xs" (click)="selectedCustomer = c">Detalhes</button>
+                <button class="btn-ghost btn-sm text-xs" (click)="toggleStatus(c)"
+                        [style.color]="c.isActive ? '#ba1a1a' : '#004be3'">
+                  {{ c.isActive ? 'Desativar' : 'Ativar' }}
+                </button>
+              </div>
+            </td>
+          </tr>
+          <tr *ngIf="customers.length === 0">
+            <td colspan="8" class="text-center py-10" style="color: var(--on-surface-variant);">Nenhum cliente encontrado.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="totalPages > 1" class="flex items-center justify-between px-4 py-3 border-t" style="border-color: var(--surface-container);">
+      <p class="text-xs" style="color: var(--on-surface-variant);">Página {{ currentPage }} de {{ totalPages }}</p>
+      <div class="flex gap-2">
+        <button class="btn-secondary btn-sm text-xs" [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1; load()">Anterior</button>
+        <button class="btn-secondary btn-sm text-xs" [disabled]="currentPage === totalPages" (click)="currentPage = currentPage + 1; load()">Próxima</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Detail Panel -->
+  <div *ngIf="selectedCustomer" class="card p-5 anim-fade-in">
+    <div class="flex items-start justify-between mb-4">
+      <div class="flex items-center gap-3">
+        <div class="avatar avatar-lg" style="background: linear-gradient(135deg, #004be3, #819bff); color: white; font-size: 1.2rem;">
+          {{ selectedCustomer.name.charAt(0) }}
+        </div>
+        <div>
+          <p class="font-bold text-base" style="font-family: 'Manrope', sans-serif;">{{ selectedCustomer.name }}</p>
+          <p class="text-sm" style="color: var(--on-surface-variant);">{{ selectedCustomer.email }}</p>
+          <p *ngIf="selectedCustomer.phone" class="text-xs" style="color: var(--on-surface-variant);">{{ selectedCustomer.phone }}</p>
+        </div>
+      </div>
+      <button class="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[var(--surface-low)]" (click)="selectedCustomer = undefined">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+      <div class="metric-card">
+        <p class="metric-label">Pedidos</p>
+        <p class="metric-value text-xl">{{ selectedCustomer.totalOrders }}</p>
+      </div>
+      <div class="metric-card">
+        <p class="metric-label">Total Gasto</p>
+        <p class="metric-value" style="font-size: 1.1rem;">{{ selectedCustomer.totalSpent | currencyBr }}</p>
+      </div>
+      <div class="metric-card">
+        <p class="metric-label">Membro Desde</p>
+        <p class="text-sm font-semibold mt-1">{{ selectedCustomer.createdAt | date:'dd/MM/yyyy' }}</p>
+      </div>
+      <div class="metric-card">
+        <p class="metric-label">Role</p>
+        <p class="text-sm font-semibold mt-1">{{ selectedCustomer.role }}</p>
+      </div>
+    </div>
+    <!-- Promote / demote role -->
+    <div class="flex items-center gap-2 pt-3 border-t" style="border-color: var(--surface-container);">
+      <span class="text-xs font-semibold" style="color: var(--on-surface-variant);">Alterar role:</span>
+      <button *ngFor="let r of ['customer','staff','admin']"
+              class="btn-sm text-xs"
+              [class]="selectedCustomer.role === r ? 'btn-primary' : 'btn-secondary'"
+              (click)="changeRole(selectedCustomer, r)">
+        {{ r }}
+      </button>
+    </div>
+  </div>
+</div>

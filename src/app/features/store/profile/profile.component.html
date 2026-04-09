@@ -1,0 +1,190 @@
+<div style="background: var(--surface-low); min-height: 100vh;">
+  <div style="background: var(--surface-container-lowest); border-bottom: 1px solid var(--surface-container);">
+    <div class="container-app py-6">
+      <div class="flex items-center gap-4">
+        <div class="avatar avatar-xl" style="background: linear-gradient(135deg, var(--primary), var(--primary-dim)); color: white; font-size: 1.5rem;">
+          {{ user?.name?.charAt(0) }}
+        </div>
+        <div>
+          <h1 style="font-family: 'Manrope', sans-serif; font-size: 1.5rem; font-weight: 800;">{{ user?.name }}</h1>
+          <p class="text-sm" style="color: var(--on-surface-variant);">{{ user?.email }}</p>
+          <p class="text-xs mt-1" style="color: var(--on-surface-variant);">
+            Membro desde {{ user?.createdAt | date:'MMMM yyyy' }} · {{ user?.totalOrders }} pedidos realizados
+          </p>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tab-bar mt-6">
+        <button class="tab-item" [class.active]="activeTab === 'orders'" (click)="activeTab = 'orders'">Pedidos</button>
+        <button class="tab-item" [class.active]="activeTab === 'addresses'" (click)="activeTab = 'addresses'">Endereços</button>
+        <button class="tab-item" [class.active]="activeTab === 'payment'" (click)="activeTab = 'payment'">Pagamento</button>
+        <button class="tab-item" [class.active]="activeTab === 'settings'" (click)="activeTab = 'settings'">Dados</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container-app py-8">
+
+    <!-- ORDERS TAB -->
+    <div *ngIf="activeTab === 'orders'" class="anim-fade-in">
+      <app-loading-spinner *ngIf="isLoadingOrders" [fullPage]="true"></app-loading-spinner>
+
+      <app-empty-state *ngIf="!isLoadingOrders && orders.length === 0"
+                       icon="orders"
+                       title="Nenhum pedido ainda"
+                       description="Seus pedidos aparecerão aqui depois da primeira compra."
+                       ctaText="Explorar Produtos"
+                       (ctaClick)="activeTab = 'orders'">
+      </app-empty-state>
+
+      <div *ngIf="!isLoadingOrders && orders.length > 0" class="space-y-4">
+        <div *ngFor="let order of orders" class="card p-5">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-bold" style="font-family: 'Manrope', sans-serif; color: var(--primary);">{{ order.orderNumber }}</span>
+                <span class="status-badge" [ngClass]="getStatusClass(order.status)">{{ getStatusLabel(order.status) }}</span>
+              </div>
+              <p class="text-xs mt-1" style="color: var(--on-surface-variant);">
+                {{ order.createdAt | date:'dd/MM/yyyy HH:mm' }} · {{ order.items.length }} item(s)
+              </p>
+            </div>
+            <div class="text-right">
+              <p class="font-bold text-lg" style="font-family: 'Manrope', sans-serif;">{{ order.total | currencyBr }}</p>
+              <p class="text-xs" style="color: var(--on-surface-variant);">{{ order.paymentMethod === 'credit_card' ? 'Cartão de Crédito' : order.paymentMethod === 'pix' ? 'PIX' : 'Dinheiro' }}</p>
+            </div>
+          </div>
+
+          <!-- Items preview -->
+          <div class="flex gap-2 overflow-x-auto pb-1">
+            <div *ngFor="let item of order.items" class="flex-shrink-0 flex items-center gap-2 bg-[var(--surface-low)] rounded-xl p-2 pr-3">
+              <img [src]="item.productImage" [alt]="item.productName" class="w-10 h-10 rounded-lg object-cover">
+              <div>
+                <p class="text-xs font-semibold whitespace-nowrap" style="max-width: 120px; overflow: hidden; text-overflow: ellipsis;">{{ item.productName }}</p>
+                <p class="text-[10px]" style="color: var(--on-surface-variant);">x{{ item.quantity }} · {{ item.unitPrice | currencyBr }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center gap-2 mt-3 pt-3 border-t" style="border-color: var(--surface-container);">
+            <button class="btn-ghost btn-sm text-xs">Ver Detalhes</button>
+            <button *ngIf="order.trackingCode" class="btn-secondary btn-sm text-xs">
+              📦 Rastrear: {{ order.trackingCode }}
+            </button>
+            <button *ngIf="order.status === 'delivered'" class="btn-secondary btn-sm text-xs">
+              ⭐ Avaliar Produtos
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADDRESSES TAB -->
+    <div *ngIf="activeTab === 'addresses'" class="anim-fade-in">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div *ngFor="let addr of user?.addresses" class="card p-5 relative">
+          <div class="flex items-start justify-between mb-3">
+            <div>
+              <span class="badge badge-primary text-[11px]">{{ addr.label }}</span>
+              <span *ngIf="addr.isDefault" class="badge badge-new text-[11px] ml-2">Padrão</span>
+            </div>
+            <div class="flex gap-1">
+              <button *ngIf="!addr.isDefault" class="btn-ghost btn-sm text-xs" (click)="setDefaultAddress(addr.id)">
+                Definir Padrão
+              </button>
+              <button class="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[var(--surface-low)]">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+            </div>
+          </div>
+          <p class="font-semibold text-sm">{{ addr.recipientName }}</p>
+          <p class="text-sm mt-1" style="color: var(--on-surface-variant);">{{ addr.street }}, {{ addr.number }}</p>
+          <p *ngIf="addr.complement" class="text-sm" style="color: var(--on-surface-variant);">{{ addr.complement }}</p>
+          <p class="text-sm" style="color: var(--on-surface-variant);">{{ addr.neighborhood }}, {{ addr.city }} - {{ addr.state }}</p>
+          <p class="text-sm" style="color: var(--on-surface-variant);">CEP: {{ addr.zipCode }}</p>
+        </div>
+
+        <!-- Add New Address -->
+        <button class="card p-5 flex flex-col items-center justify-center gap-3 border-2 border-dashed" style="border-color: var(--surface-container); min-height: 160px;">
+          <div class="w-10 h-10 rounded-full bg-[var(--surface-low)] flex items-center justify-center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#afacac" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <p class="text-sm font-semibold" style="color: var(--on-surface-variant);">Adicionar Endereço</p>
+        </button>
+      </div>
+    </div>
+
+    <!-- PAYMENT TAB -->
+    <div *ngIf="activeTab === 'payment'" class="anim-fade-in">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div *ngFor="let pm of user?.paymentMethods" class="card p-5">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: var(--surface-low); font-size: 1.25rem;">
+                {{ pm.type === 'credit_card' ? '💳' : pm.type === 'pix' ? '📲' : '💵' }}
+              </div>
+              <div>
+                <p class="font-semibold text-sm">{{ pm.type === 'credit_card' ? pm.brand + ' •••• ' + pm.lastFour : pm.type === 'pix' ? 'Chave PIX' : 'Dinheiro' }}</p>
+                <p *ngIf="pm.expiryMonth" class="text-xs" style="color: var(--on-surface-variant);">Validade: {{ pm.expiryMonth }}/{{ pm.expiryYear }}</p>
+              </div>
+            </div>
+            <span *ngIf="pm.isDefault" class="badge badge-new text-[11px]">Padrão</span>
+          </div>
+          <p *ngIf="pm.holderName" class="text-sm" style="color: var(--on-surface-variant);">{{ pm.holderName }}</p>
+        </div>
+
+        <button class="card p-5 flex flex-col items-center justify-center gap-3 border-2 border-dashed" style="border-color: var(--surface-container); min-height: 120px;">
+          <div class="w-10 h-10 rounded-full bg-[var(--surface-low)] flex items-center justify-center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#afacac" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <p class="text-sm font-semibold" style="color: var(--on-surface-variant);">Adicionar Método de Pagamento</p>
+        </button>
+      </div>
+    </div>
+
+    <!-- SETTINGS TAB -->
+    <div *ngIf="activeTab === 'settings'" class="anim-fade-in max-w-xl">
+      <div class="card p-6">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="font-bold text-base" style="font-family: 'Manrope', sans-serif;">Meus Dados</h2>
+          <button *ngIf="!isEditingProfile" class="btn-secondary btn-sm" (click)="isEditingProfile = true">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Editar
+          </button>
+        </div>
+
+        <form [formGroup]="profileForm" class="space-y-4">
+          <div class="form-group">
+            <label class="form-label">Nome Completo</label>
+            <input type="text" class="form-input" formControlName="name" [disabled]="!isEditingProfile">
+          </div>
+          <div class="form-group">
+            <label class="form-label">E-mail</label>
+            <input type="email" class="form-input" formControlName="email" [disabled]="!isEditingProfile">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div class="form-group">
+              <label class="form-label">Telefone</label>
+              <input type="tel" class="form-input" formControlName="phone" [disabled]="!isEditingProfile" placeholder="+55 11 99999-0000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">CPF</label>
+              <input type="text" class="form-input" formControlName="cpf" [disabled]="!isEditingProfile" placeholder="000.000.000-00">
+            </div>
+          </div>
+          <label class="flex items-center gap-2 cursor-pointer" [class.opacity-50]="!isEditingProfile">
+            <input type="checkbox" class="form-checkbox" formControlName="newsletterOptIn" [disabled]="!isEditingProfile">
+            <span class="text-sm">Receber e-mails sobre novidades e promoções</span>
+          </label>
+
+          <div *ngIf="isEditingProfile" class="flex gap-3 pt-2">
+            <button type="button" class="btn-primary flex-1" (click)="saveProfile()">Salvar Alterações</button>
+            <button type="button" class="btn-secondary" (click)="isEditingProfile = false">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

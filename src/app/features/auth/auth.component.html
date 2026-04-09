@@ -1,0 +1,138 @@
+<div class="min-h-screen flex" style="background: var(--surface-low);">
+
+  <!-- Left: Decorative -->
+  <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden flex-col justify-between p-12" style="background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0f3460 100%);">
+    <div class="absolute inset-0 overflow-hidden opacity-20">
+      <div class="absolute top-20 left-10 w-64 h-64 rounded-full" style="background: #004be3; filter: blur(80px);"></div>
+      <div class="absolute bottom-20 right-10 w-64 h-64 rounded-full" style="background: #819bff; filter: blur(80px);"></div>
+    </div>
+    <div class="relative z-10">
+      <div class="flex items-center gap-3 mb-16">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: linear-gradient(135deg, #004be3, #819bff);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <span class="font-bold text-xl text-white" style="font-family: 'Manrope', sans-serif;">The Curator</span>
+      </div>
+      <h2 class="auth-panel-title text-4xl font-extrabold mb-4" style="font-family: 'Manrope', sans-serif; line-height: 1.15;">
+        Curating the finest in modern commerce.
+      </h2>
+      <p class="auth-panel-subtitle text-lg">We believe in high-energy aesthetics and sophisticated simplicity.</p>
+    </div>
+    <div class="relative z-10 space-y-4">
+      <div *ngFor="let feature of [
+        {icon: '🛍️', text: 'Catálogo curado com produtos premium'},
+        {icon: '🚀', text: 'Entrega rápida para todo o Brasil'},
+        {icon: '🔒', text: 'Pagamento seguro e criptografado'}
+      ]" class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm" style="background: rgba(255,255,255,0.1);">{{ feature.icon }}</div>
+        <span class="auth-panel-feature-text text-sm">{{ feature.text }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Form -->
+  <div class="flex-1 flex items-center justify-center p-6 lg:p-12">
+    <div class="w-full max-w-sm">
+
+      <!-- Mobile Logo -->
+      <div class="lg:hidden flex items-center gap-2 mb-8">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, #004be3, #819bff);">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <span class="font-bold" style="font-family: 'Manrope', sans-serif;">The Curator</span>
+      </div>
+
+      <!-- Tab Toggle -->
+      <div class="flex gap-0 mb-8 border-b-2" style="border-color: var(--surface-container);">
+        <button class="flex-1 pb-3 text-sm font-semibold transition-all border-b-2 -mb-0.5"
+                [class]="mode === 'login' ? 'border-[#004be3] text-[#004be3]' : 'border-transparent text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'"
+                (click)="mode = 'login'">
+          Entrar
+        </button>
+        <button class="flex-1 pb-3 text-sm font-semibold transition-all border-b-2 -mb-0.5"
+                [class]="mode === 'register' ? 'border-[#004be3] text-[#004be3]' : 'border-transparent text-[var(--on-surface-variant)] hover:text-[var(--on-surface)]'"
+                (click)="mode = 'register'">
+          Criar Conta
+        </button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <form *ngIf="mode === 'login'" [formGroup]="loginForm" (ngSubmit)="login()" class="space-y-4 anim-fade-in">
+        <div class="form-group">
+          <label class="form-label">E-mail</label>
+          <input type="email" class="form-input" formControlName="email" placeholder="seu@email.com" autocomplete="email">
+          <p *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid" class="form-error">E-mail inválido</p>
+        </div>
+        <div class="form-group">
+          <div class="flex items-center justify-between">
+            <label class="form-label">Senha</label>
+            <button type="button" class="text-xs text-[#004be3] hover:underline">Esqueceu a senha?</button>
+          </div>
+          <div class="relative">
+            <input [type]="showPassword ? 'text' : 'password'" class="form-input pr-10" formControlName="password" placeholder="••••••••" autocomplete="current-password">
+            <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2" style="color: var(--outline-variant);" (click)="showPassword = !showPassword">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <ng-container *ngIf="!showPassword">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                </ng-container>
+                <ng-container *ngIf="showPassword">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </ng-container>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary btn-full btn-lg" [disabled]="isLoading">
+          {{ isLoading ? 'Entrando...' : 'Entrar' }}
+        </button>
+      </form>
+
+      <!-- REGISTER FORM -->
+      <form *ngIf="mode === 'register'" [formGroup]="registerForm" (ngSubmit)="register()" class="space-y-4 anim-fade-in">
+        <div class="form-group">
+          <label class="form-label">Nome Completo</label>
+          <input type="text" class="form-input" formControlName="name" placeholder="Seu nome completo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">E-mail</label>
+          <input type="email" class="form-input" formControlName="email" placeholder="seu@email.com">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="form-group">
+            <label class="form-label">Telefone</label>
+            <input type="tel" class="form-input" formControlName="phone" placeholder="+55 11...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">CPF (opcional)</label>
+            <input type="text" class="form-input" formControlName="cpf" placeholder="000.000.000-00">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Senha</label>
+          <input [type]="showPassword ? 'text' : 'password'" class="form-input" formControlName="password" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirmar Senha</label>
+          <input [type]="showPassword ? 'text' : 'password'" class="form-input" formControlName="confirmPassword" placeholder="Repita a senha">
+          <p *ngIf="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.hasError('mismatch')" class="form-error">As senhas não conferem</p>
+        </div>
+        <label class="flex items-start gap-2 cursor-pointer text-xs" style="color: var(--on-surface-variant);">
+          <input type="checkbox" class="form-checkbox mt-0.5 flex-shrink-0">
+          Concordo com os <a href="#" class="text-[#004be3]">Termos de Uso</a> e <a href="#" class="text-[#004be3]">Política de Privacidade</a>
+        </label>
+        <button type="submit" class="btn-primary btn-full btn-lg" [disabled]="isLoading">
+          {{ isLoading ? 'Criando conta...' : 'Criar Conta Grátis' }}
+        </button>
+      </form>
+
+      <p class="text-xs text-center mt-6" style="color: var(--on-surface-variant);">
+        Ao continuar, você concorda com nossa
+        <a href="#" class="text-[#004be3] hover:underline">Política de Privacidade</a>
+      </p>
+    </div>
+  </div>
+
+  <app-toast-container></app-toast-container>
+</div>

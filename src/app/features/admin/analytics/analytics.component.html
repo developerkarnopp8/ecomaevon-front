@@ -1,0 +1,142 @@
+<div class="space-y-5" *ngIf="metrics">
+
+  <div>
+    <h1 style="font-family: 'Manrope', sans-serif; font-size: 1.75rem; font-weight: 800;">Analytics</h1>
+    <p class="text-sm mt-1" style="color: var(--on-surface-variant);">Visão geral de desempenho da loja</p>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="metric-card">
+      <p class="metric-label">Receita Mensal</p>
+      <p class="metric-value">{{ (metrics.monthlyRevenue / 1000) | number:'1.1-1' }}k</p>
+      <p class="metric-change positive">↑ {{ metrics.monthlyGrowth }}% vs mês anterior</p>
+    </div>
+    <div class="metric-card">
+      <p class="metric-label">Ticket Médio</p>
+      <p class="metric-value">{{ metrics.avgOrderValue | currencyBr }}</p>
+      <p class="metric-change positive">↑ 5.2% vs mês anterior</p>
+    </div>
+    <div class="metric-card">
+      <p class="metric-label">Taxa de Conversão</p>
+      <p class="metric-value">{{ metrics.conversionRate }}%</p>
+      <p class="metric-change positive">↑ 0.3% vs mês anterior</p>
+    </div>
+    <div class="metric-card">
+      <p class="metric-label">Taxa de Devoluções</p>
+      <p class="metric-value">{{ metrics.refundRate }}%</p>
+      <p class="metric-change positive">↓ Abaixo da média</p>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+    <!-- Revenue Chart -->
+    <div class="card p-5">
+      <h2 class="font-bold text-sm mb-4" style="font-family: 'Manrope', sans-serif;">Receita por Dia (últimos 7 dias)</h2>
+      <div class="flex items-end gap-2 h-44">
+        <div *ngFor="let d of metrics.revenueChart; let i = index" class="flex flex-col items-center gap-1 flex-1">
+          <span class="text-[10px] font-bold" style="color: #004be3;">{{ (d.value/1000).toFixed(1) }}k</span>
+          <div class="w-full rounded-t-lg transition-all"
+               [style.height.%]="getBarWidth(d.value)"
+               [style.background]="i === 2 ? 'linear-gradient(180deg, #004be3, #819bff)' : 'rgba(0,75,227,0.15)'"
+               style="min-height: 8px;"></div>
+          <span class="text-[10px] font-semibold" style="color: var(--on-surface-variant);">{{ d.label }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sales by Category Donut-like -->
+    <div class="card p-5">
+      <h2 class="font-bold text-sm mb-4" style="font-family: 'Manrope', sans-serif;">Vendas por Categoria</h2>
+      <div class="space-y-3">
+        <div *ngFor="let cat of metrics.salesByCategory; let i = index">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-sm font-medium">{{ cat.category }}</span>
+            <span class="text-sm font-bold" style="color: #004be3;">{{ cat.percent }}%</span>
+          </div>
+          <div class="h-2 rounded-full" style="background: var(--surface-container);">
+            <div class="h-2 rounded-full transition-all"
+                 [style.width.%]="cat.percent"
+                 [style.background]="['#004be3','#819bff','#6c8cff','#b7c5ff','#dfe4ff'][i] || '#004be3'">
+            </div>
+          </div>
+          <div class="flex justify-between text-xs mt-0.5" style="color: var(--on-surface-variant);">
+            <span>{{ cat.revenue | currencyBr }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Products -->
+  <div class="card p-5">
+    <h2 class="font-bold text-sm mb-4" style="font-family: 'Manrope', sans-serif;">Produtos Mais Vendidos</h2>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Produto</th>
+            <th>Vendas</th>
+            <th>Receita</th>
+            <th>Performance</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let p of metrics.topProducts; let i = index">
+            <td>
+              <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                    [style.background]="i === 0 ? '#004be3' : i === 1 ? '#819bff' : '#eae7e7'"
+                    [style.color]="i < 2 ? '#fff' : '#6b6868'"
+                    style="display: inline-flex;">
+                {{ i + 1 }}
+              </span>
+            </td>
+            <td>
+              <div class="flex items-center gap-2">
+                <img [src]="p.image" [alt]="p.name" class="w-10 h-10 rounded-lg object-cover">
+                <span class="font-medium text-sm">{{ p.name }}</span>
+              </div>
+            </td>
+            <td><span class="font-semibold text-sm">{{ p.sales }}</span></td>
+            <td><span class="font-semibold text-sm" style="color: #004be3;">{{ p.revenue | currencyBr }}</span></td>
+            <td>
+              <div class="flex items-center gap-2 w-32">
+                <div class="flex-1 h-1.5 rounded-full" style="background: var(--surface-container);">
+                  <div class="h-1.5 rounded-full" style="background: #004be3;"
+                       [style.width.%]="(p.sales / metrics.topProducts[0].sales) * 100"></div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Monthly Summary -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="card p-4 text-center">
+      <p class="text-3xl mb-1">📦</p>
+      <p class="metric-label">Total Pedidos</p>
+      <p class="font-bold text-xl" style="font-family: 'Manrope', sans-serif;">1.248</p>
+    </div>
+    <div class="card p-4 text-center">
+      <p class="text-3xl mb-1">👥</p>
+      <p class="metric-label">Novos Clientes</p>
+      <p class="font-bold text-xl" style="font-family: 'Manrope', sans-serif;">247</p>
+    </div>
+    <div class="card p-4 text-center">
+      <p class="text-3xl mb-1">🛒</p>
+      <p class="metric-label">Carrinhos Abandonados</p>
+      <p class="font-bold text-xl" style="font-family: 'Manrope', sans-serif;">382</p>
+    </div>
+    <div class="card p-4 text-center">
+      <p class="text-3xl mb-1">⭐</p>
+      <p class="metric-label">Avaliação Média</p>
+      <p class="font-bold text-xl" style="font-family: 'Manrope', sans-serif;">4.7</p>
+    </div>
+  </div>
+</div>

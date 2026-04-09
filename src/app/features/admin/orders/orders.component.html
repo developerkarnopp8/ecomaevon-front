@@ -1,0 +1,193 @@
+<div class="space-y-5">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <p class="text-xs font-bold uppercase tracking-widest mb-1" style="color: var(--on-surface-variant);">MERCHANT PORTAL</p>
+      <h1 style="font-family: 'Manrope', sans-serif; font-size: 1.75rem; font-weight: 800;">Gestão de Pedidos</h1>
+    </div>
+    <div class="flex gap-2">
+      <button class="btn-secondary btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar
+      </button>
+      <button class="btn-primary btn-sm">+ Pedido Manual</button>
+    </div>
+  </div>
+
+  <!-- Metrics Row -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="metric-card">
+      <p class="metric-label">Receita Total</p>
+      <p class="metric-value text-xl">R$ 128.430</p>
+      <p class="metric-change positive">+12.5% vs mês passado</p>
+    </div>
+    <div class="metric-card">
+      <p class="metric-label">Processando</p>
+      <p class="metric-value text-xl">42</p>
+      <p class="metric-change neutral">8 precisam de atenção</p>
+    </div>
+    <div class="metric-card">
+      <p class="metric-label">Enviados Hoje</p>
+      <p class="metric-value text-xl">18</p>
+      <p class="metric-change positive">No caminho certo</p>
+    </div>
+    <div class="metric-card">
+      <p class="metric-label">Taxa de Devoluções</p>
+      <p class="metric-value text-xl">1.2%</p>
+      <p class="metric-change positive">Abaixo da média</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="card p-4">
+    <div class="flex flex-col sm:flex-row gap-3">
+      <div class="flex gap-2 flex-wrap">
+        <select class="form-select w-44 py-2 text-sm" [(ngModel)]="selectedStatus" (change)="currentPage=1; load()">
+          <option *ngFor="let s of statuses" [value]="s.value">{{ s.label }}</option>
+        </select>
+      </div>
+      <div class="search-bar flex-1">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#afacac" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar por cliente, ID ou produto..." [(ngModel)]="searchQuery" (keyup.enter)="currentPage=1; load()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Orders Table -->
+  <div class="card overflow-hidden">
+    <app-loading-spinner *ngIf="isLoading" [fullPage]="true"></app-loading-spinner>
+
+    <div *ngIf="!isLoading" class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID DO PEDIDO</th>
+            <th>CLIENTE</th>
+            <th>DATA</th>
+            <th>STATUS</th>
+            <th>VALOR TOTAL</th>
+            <th>AÇÕES</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of orders" class="cursor-pointer" (click)="selectedOrder = selectedOrder?.id === order.id ? undefined : order">
+            <td>
+              <span class="font-bold text-sm" style="color: #004be3;">{{ order.orderNumber }}</span>
+            </td>
+            <td>
+              <div class="flex items-center gap-2">
+                <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #eae7e7, #dfdcdc); font-size: 0.75rem;">
+                  {{ order.customerName.charAt(0) }}
+                </div>
+                <span class="text-sm font-medium">{{ order.customerName }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="text-sm" style="color: var(--on-surface-variant);">{{ order.createdAt | date:'dd/MM/yyyy' }}</span>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="'status-' + order.status">{{ getStatusLabel(order.status) }}</span>
+            </td>
+            <td>
+              <span class="font-semibold text-sm">{{ order.total | currencyBr }}</span>
+            </td>
+            <td>
+              <button class="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[var(--surface-low)]" style="color: var(--on-surface-variant);" (click)="$event.stopPropagation(); selectedOrder = order">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="flex items-center justify-between px-4 py-3 border-t" style="border-color: var(--surface-container);">
+      <p class="text-xs" style="color: var(--on-surface-variant);">Mostrando {{ orders.length }} de {{ total }} pedidos</p>
+      <app-pagination [currentPage]="currentPage" [totalPages]="totalPages" (pageChange)="currentPage=$event; load()"></app-pagination>
+    </div>
+  </div>
+
+  <!-- Order Detail Drawer -->
+  <div *ngIf="selectedOrder" class="card p-5 anim-slide-right">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-bold text-base" style="font-family: 'Manrope', sans-serif;">Detalhes: {{ selectedOrder.orderNumber }}</h2>
+      <button class="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[var(--surface-low)]" (click)="selectedOrder = undefined">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Items -->
+    <div class="space-y-2 mb-4">
+      <div *ngFor="let item of selectedOrder.items" class="flex items-center gap-3 p-3 rounded-xl" style="background: var(--surface-low);">
+        <img [src]="item.productImage" [alt]="item.productName" class="w-12 h-12 rounded-lg object-cover">
+        <div class="flex-1 min-w-0">
+          <p class="text-sm font-semibold truncate">{{ item.productName }}</p>
+          <p class="text-xs" style="color: var(--on-surface-variant);">
+            <span *ngIf="item.selectedColor">{{ item.selectedColor }}</span>
+            <span *ngIf="item.selectedSize"> · Tam: {{ item.selectedSize }}</span>
+            · x{{ item.quantity }}
+          </p>
+        </div>
+        <span class="font-bold text-sm">{{ item.totalPrice | currencyBr }}</span>
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="space-y-1.5 text-sm mb-4">
+      <div class="flex justify-between"><span style="color: var(--on-surface-variant);">Subtotal</span><span>{{ selectedOrder.subtotal | currencyBr }}</span></div>
+      <div *ngIf="selectedOrder.discountAmount > 0" class="flex justify-between" style="color: #1a6e2e;"><span>Desconto</span><span>− {{ selectedOrder.discountAmount | currencyBr }}</span></div>
+      <div class="flex justify-between"><span style="color: var(--on-surface-variant);">Frete</span><span>{{ selectedOrder.shippingCost === 0 ? 'Grátis' : (selectedOrder.shippingCost | currencyBr) }}</span></div>
+      <div class="flex justify-between font-bold"><span>Total</span><span style="color: #004be3;">{{ selectedOrder.total | currencyBr }}</span></div>
+    </div>
+
+    <!-- Update Status -->
+    <div>
+      <label class="form-label">Atualizar Status</label>
+      <div class="flex gap-2 flex-wrap">
+        <button *ngFor="let s of statuses.slice(1)"
+                class="btn-secondary btn-sm text-xs"
+                [class]="selectedOrder.status === s.value ? 'btn-primary' : ''"
+                (click)="updateStatus(selectedOrder.id, $any(s.value))">
+          {{ s.label }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Delivery Performance placeholder -->
+    <div class="card p-5">
+      <h2 class="font-bold text-base mb-4" style="font-family: 'Manrope', sans-serif;">Performance de Entrega</h2>
+      <div class="flex items-end gap-2 h-32">
+        <div *ngFor="let d of [
+          {day: 'Seg', val: 65},
+          {day: 'Ter', val: 80},
+          {day: 'Qua', val: 100},
+          {day: 'Qui', val: 75},
+          {day: 'Sex', val: 85},
+          {day: 'Sáb', val: 45},
+          {day: 'Dom', val: 55}
+        ]" class="flex flex-col items-center gap-1 flex-1">
+          <div class="w-full rounded-t-lg" [style.height.%]="d.val"
+               style="background: rgba(0,75,227,0.15); min-height: 6px;"></div>
+          <span class="text-[9px] font-semibold" style="color: var(--on-surface-variant);">{{ d.day }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Automated Rules -->
+    <div class="card p-5" style="background: linear-gradient(135deg, #3730a3 0%, #004be3 100%);">
+      <h2 class="font-bold text-base mb-2 text-white" style="font-family: 'Manrope', sans-serif;">Regras Automáticas</h2>
+      <p class="text-white/70 text-sm mb-4">Sistema auto-atribuindo parceiros de entrega baseado em eficiência regional.</p>
+      <div class="mb-4">
+        <div class="flex justify-between mb-1"><span class="text-white/70 text-xs">OTIMIZAÇÃO</span><span class="text-white font-bold text-sm">94%</span></div>
+        <div class="h-2 rounded-full bg-white/20"><div class="h-2 rounded-full bg-white" style="width:94%"></div></div>
+      </div>
+      <button class="w-full py-2.5 rounded-xl text-sm font-semibold" style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.2);">
+        Configurar Fluxos
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,182 @@
+<!-- ============ HERO BANNER CAROUSEL ============ -->
+<section class="relative overflow-hidden" style="height: 520px; background: var(--on-surface);">
+  <!-- Slides -->
+  <div *ngFor="let banner of banners; let i = index"
+       class="absolute inset-0 transition-opacity duration-700"
+       [style.opacity]="i === currentBannerIdx ? '1' : '0'">
+    <img [src]="banner.imageUrl" [alt]="banner.title"
+         class="absolute inset-0 w-full h-full object-cover"
+         style="filter: brightness(0.55);">
+    <div class="relative h-full flex items-center">
+      <div class="container-app">
+        <div class="max-w-xl anim-fade-in">
+          <span *ngIf="banner.badge" class="badge badge-limited mb-4">{{ banner.badge }}</span>
+          <h1 class="text-white mb-4" style="font-family: 'Manrope', sans-serif; font-size: 3rem; font-weight: 800; line-height: 1.1;">
+            {{ banner.title }}
+          </h1>
+          <p *ngIf="banner.subtitle" class="text-white/70 text-lg mb-8">{{ banner.subtitle }}</p>
+          <a *ngIf="banner.ctaLink" [routerLink]="banner.ctaLink" class="btn-primary btn-lg">
+            {{ banner.ctaText || 'Explorar' }}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Carousel Controls -->
+  <button *ngIf="banners.length > 1" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-sm flex items-center justify-center text-white transition-all"
+          (click)="prevBanner()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>
+  <button *ngIf="banners.length > 1" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-sm flex items-center justify-center text-white transition-all"
+          (click)="nextBanner()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>
+
+  <!-- Dots -->
+  <div *ngIf="banners.length > 1" class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+    <button *ngFor="let b of banners; let i = index"
+            class="rounded-full transition-all"
+            [class]="i === currentBannerIdx ? 'w-6 h-2 bg-white' : 'w-2 h-2 bg-white/40'"
+            (click)="goToBanner(i)">
+    </button>
+  </div>
+</section>
+
+<!-- ============ CATEGORIES ============ -->
+<section class="section-categories">
+  <div class="container-app">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Explorar por Categoria</h2>
+        <p class="section-subtitle">Encontre exatamente o que procura</p>
+      </div>
+      <a routerLink="/catalogo" class="btn-ghost btn-sm">
+        Ver todas
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3">
+      <a *ngFor="let cat of categories.slice(0, 8)" [routerLink]="['/catalogo']" [queryParams]="{categoria: cat.id}"
+         class="group flex flex-col items-center gap-2 p-4 rounded-xl transition-all duration-200 hover:bg-[var(--surface-low)] cursor-pointer">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl transition-transform duration-200 group-hover:scale-110"
+             style="background: linear-gradient(135deg, rgba(0,75,227,0.06), rgba(129,155,255,0.1));">
+          {{ cat.icon || '🛍️' }}
+        </div>
+        <span class="text-xs font-semibold text-center" style="color: var(--on-surface); line-height: 1.3;">{{ cat.name }}</span>
+        <span class="text-[10px]" style="color: var(--outline-variant);">{{ cat.productCount }} itens</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FEATURED PRODUCTS ============ -->
+<section class="section-featured">
+  <div class="container-app">
+    <div class="section-header">
+      <div>
+        <span class="badge badge-primary mb-2">Seleção Especial</span>
+        <h2 class="section-title">Produtos em Destaque</h2>
+        <p class="section-subtitle">Curadoria dos nossos melhores itens</p>
+      </div>
+      <a routerLink="/catalogo" [queryParams]="{destaque: true}" class="btn-secondary btn-sm hidden sm:inline-flex">
+        Ver todos
+      </a>
+    </div>
+
+    <!-- Loading skeleton -->
+    <div *ngIf="isLoadingFeatured" class="skeleton-grid">
+      <div *ngFor="let s of [1,2,3,4]" class="rounded-xl overflow-hidden">
+        <div class="skeleton" style="aspect-ratio: 4/3;"></div>
+        <div class="p-3 space-y-2">
+          <div class="skeleton h-3 w-1/3 rounded"></div>
+          <div class="skeleton h-4 w-2/3 rounded"></div>
+          <div class="skeleton h-4 w-1/2 rounded"></div>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!isLoadingFeatured" class="products-grid">
+      <app-product-card *ngFor="let product of featuredProducts.slice(0, 8)"
+                        [product]="product"></app-product-card>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROMO BANNER ============ -->
+<section class="section-promo">
+  <div class="container-app">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-6 text-white">
+      <div>
+        <p class="text-sm font-semibold opacity-80 mb-1">✨ OFERTA ESPECIAL</p>
+        <h2 style="font-family: 'Manrope', sans-serif; font-size: 1.75rem; font-weight: 800;">
+          Frete Grátis em Pedidos Acima de R$300
+        </h2>
+        <p class="opacity-80 text-sm mt-1">Aproveite nossa política de frete gratuito e economize na entrega.</p>
+      </div>
+      <a routerLink="/catalogo" class="btn-secondary flex-shrink-0">
+        Comprar Agora
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ NEW ARRIVALS ============ -->
+<section class="section-new-arrivals">
+  <div class="container-app">
+    <div class="section-header">
+      <div>
+        <span class="badge badge-new mb-2">Recém Chegados</span>
+        <h2 class="section-title">Novidades</h2>
+        <p class="section-subtitle">Os produtos mais recentes da nossa curadoria</p>
+      </div>
+      <a routerLink="/catalogo" [queryParams]="{novo: true}" class="btn-secondary btn-sm hidden sm:inline-flex">
+        Ver novidades
+      </a>
+    </div>
+
+    <div *ngIf="!isLoadingNew" class="products-grid">
+      <app-product-card *ngFor="let product of newArrivals.slice(0, 4)"
+                        [product]="product"></app-product-card>
+    </div>
+  </div>
+</section>
+
+<!-- ============ VALUE PROPOSITIONS ============ -->
+<section class="section-values">
+  <div class="container-app">
+    <div class="values-grid">
+      <div class="flex flex-col items-center text-center gap-3 p-6">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center" style="background: rgba(0,75,227,0.08);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        </div>
+        <h3 class="font-semibold text-sm" style="font-family: 'Manrope', sans-serif;">Entrega Rápida</h3>
+        <p class="text-xs" style="color: var(--on-surface-variant);">2-5 dias úteis para todo o Brasil</p>
+      </div>
+      <div class="flex flex-col items-center text-center gap-3 p-6">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center" style="background: rgba(26,110,46,0.08);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1a6e2e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <h3 class="font-semibold text-sm" style="font-family: 'Manrope', sans-serif;">Compra Segura</h3>
+        <p class="text-xs" style="color: var(--on-surface-variant);">Criptografia SSL em todos os pagamentos</p>
+      </div>
+      <div class="flex flex-col items-center text-center gap-3 p-6">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center" style="background: rgba(179,0,139,0.08);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#b3008b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        </div>
+        <h3 class="font-semibold text-sm" style="font-family: 'Manrope', sans-serif;">Devolução Fácil</h3>
+        <p class="text-xs" style="color: var(--on-surface-variant);">30 dias para troca ou devolução</p>
+      </div>
+      <div class="flex flex-col items-center text-center gap-3 p-6">
+        <div class="w-12 h-12 rounded-2xl flex items-center justify-center" style="background: rgba(122,89,0,0.08);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7a5900" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <h3 class="font-semibold text-sm" style="font-family: 'Manrope', sans-serif;">Suporte 24/7</h3>
+        <p class="text-xs" style="color: var(--on-surface-variant);">Atendimento por chat, e-mail ou WhatsApp</p>
+      </div>
+    </div>
+  </div>
+</section>

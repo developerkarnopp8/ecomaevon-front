@@ -1,0 +1,81 @@
+<article class="card card-hover group cursor-pointer relative" [routerLink]="['/produto', product.slug]">
+
+  <!-- Image Container -->
+  <div class="relative overflow-hidden" style="aspect-ratio: 4/3;">
+    <img [src]="primaryImage" [alt]="product.name"
+         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy">
+
+    <!-- Overlay Actions -->
+    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 flex items-end justify-center pb-3 opacity-0 group-hover:opacity-100">
+      <button class="btn-primary btn-sm" (click)="addToCart($event)"
+              [disabled]="product.stock === 0 || isAddingToCart">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
+        {{ isAddingToCart ? 'Adicionando...' : product.stock === 0 ? 'Esgotado' : 'Adicionar' }}
+      </button>
+    </div>
+
+    <!-- Top Badges -->
+    <div class="absolute top-2 left-2 flex flex-col gap-1">
+      <span *ngIf="product.isLimitedEdition" class="badge badge-limited text-[10px]">Limited Edition</span>
+      <span *ngIf="product.isNewArrival && !product.isLimitedEdition" class="badge badge-new text-[10px]">Novo</span>
+      <span *ngIf="discountPercent > 0" class="badge badge-sale text-[10px]">-{{ discountPercent }}%</span>
+    </div>
+
+    <!-- Stock Badge -->
+    <div *ngIf="stockBadge" class="absolute bottom-2 left-2">
+      <span class="badge text-[10px]" [ngClass]="stockBadge.class">{{ stockBadge.text }}</span>
+    </div>
+
+    <!-- Wishlist Button -->
+    <button class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center transition-all duration-200 hover:bg-white hover:scale-110"
+            (click)="toggleWishlist($event)" [attr.aria-label]="isWishlisted ? 'Remover dos favoritos' : 'Salvar nos favoritos'">
+      <svg width="14" height="14" viewBox="0 0 24 24" [attr.fill]="isWishlisted ? '#004be3' : 'none'" [attr.stroke]="isWishlisted ? '#004be3' : '#6b6868'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div class="p-4">
+    <!-- Category -->
+    <p class="text-[11px] font-600 uppercase tracking-wide mb-1" style="color: var(--outline-variant); letter-spacing: 0.06em;">
+      {{ product.categoryName }}
+    </p>
+
+    <!-- Name -->
+    <h3 class="font-semibold text-sm leading-tight mb-2 line-clamp-2" style="color: var(--on-surface); font-family: 'Manrope', sans-serif;">
+      {{ product.name }}
+    </h3>
+
+    <!-- Rating -->
+    <div class="flex items-center gap-1 mb-2">
+      <app-star-rating [rating]="product.rating" [size]="12"></app-star-rating>
+      <span class="text-[11px]" style="color: var(--on-surface-variant);">({{ product.reviewCount }})</span>
+    </div>
+
+    <!-- Price -->
+    <div class="flex items-end gap-2 mt-auto">
+      <span class="price-main text-base">
+        {{ product.price | currencyBr }}
+      </span>
+      <span *ngIf="product.originalPrice && product.originalPrice > product.price" class="price-original text-xs">
+        {{ product.originalPrice | currencyBr }}
+      </span>
+    </div>
+
+    <!-- Color Dots Preview -->
+    <div *ngIf="product.colorVariants.length > 0" class="flex items-center gap-1 mt-2">
+      <div *ngFor="let color of product.colorVariants.slice(0, 4)"
+           class="w-3 h-3 rounded-full border border-white ring-1 ring-gray-200"
+           [style.background]="color.hex"
+           [attr.title]="color.name">
+      </div>
+      <span *ngIf="product.colorVariants.length > 4" class="text-[10px]" style="color: var(--outline-variant);">
+        +{{ product.colorVariants.length - 4 }}
+      </span>
+    </div>
+  </div>
+</article>

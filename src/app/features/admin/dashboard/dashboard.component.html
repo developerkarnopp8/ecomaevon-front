@@ -1,0 +1,227 @@
+<div class="space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <p class="text-xs font-bold uppercase tracking-widest mb-1" style="color: var(--on-surface-variant);">MERCHANT PORTAL</p>
+      <h1 style="font-family: 'Manrope', sans-serif; font-size: 1.75rem; font-weight: 800;">Store Dashboard</h1>
+      <p class="text-sm mt-1" style="color: var(--on-surface-variant);">Welcome back. Your shop is performing beautifully today.</p>
+    </div>
+    <div class="flex gap-2 flex-shrink-0">
+      <a routerLink="/admin/products" class="btn-secondary btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Ver Todos
+      </a>
+      <a routerLink="/admin/products/new" class="btn-primary btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Adicionar Produto
+      </a>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div *ngFor="let i of [1,2,3,4]" class="metric-card animate-pulse" style="min-height: 90px;">
+      <div class="h-3 w-24 rounded mb-2" style="background: var(--surface-container);"></div>
+      <div class="h-7 w-16 rounded" style="background: var(--surface-container);"></div>
+    </div>
+  </div>
+
+  <!-- Metric Cards -->
+  <div *ngIf="!isLoading && metrics" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+    <!-- Today's Sales -->
+    <div class="metric-card">
+      <p class="metric-label">Vendas de Hoje</p>
+      <p class="metric-value">{{ metrics.todaySales | currencyBr }}</p>
+      <p class="metric-change positive">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        +14% em relação a ontem
+      </p>
+    </div>
+
+    <!-- Pending Orders -->
+    <div class="metric-card">
+      <p class="metric-label">Pedidos Pendentes</p>
+      <p class="metric-value">{{ metrics.pendingOrders }}</p>
+      <p class="metric-change neutral">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        8 precisam de atenção
+      </p>
+    </div>
+
+    <!-- Catalog Size -->
+    <div class="metric-card">
+      <p class="metric-label">Tamanho do Catálogo</p>
+      <p class="metric-value">{{ metrics.totalProducts }}</p>
+      <p class="metric-change positive">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        12 adicionados esta semana
+      </p>
+    </div>
+
+    <!-- Monthly Reach -->
+    <div class="metric-card" style="background: rgba(0,75,227,0.04); border: 1px solid rgba(0,75,227,0.1);">
+      <p class="metric-label" style="color: #004be3;">Alcance Mensal</p>
+      <p class="metric-value">{{ metrics.monthlyReach / 1000 | number:'1.0-0' }}k</p>
+      <a routerLink="/admin/analytics" class="text-xs font-semibold mt-2 inline-flex items-center gap-1" style="color: #004be3;">
+        Gerenciar Anúncios
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- Revenue Chart + Top Products -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+    <!-- Revenue Chart -->
+    <div *ngIf="metrics" class="lg:col-span-2 card p-5">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h2 class="font-bold text-base" style="font-family: 'Manrope', sans-serif;">Receita Diária</h2>
+          <p class="text-xs mt-0.5" style="color: var(--on-surface-variant);">Últimos 7 dias</p>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="text-2xl font-extrabold" style="font-family: 'Manrope', sans-serif; color: #004be3;">
+            {{ metrics.monthlyRevenue | currencyBr }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Bar Chart -->
+      <div class="flex items-end gap-2 h-40">
+        <div *ngFor="let d of metrics.revenueChart; let i = index" class="flex flex-col items-center gap-1 flex-1">
+          <div class="w-full rounded-t-lg transition-all duration-500 flex items-end justify-center"
+               [style.height.%]="getBarWidth(d.value)"
+               [style.background]="i === 2 ? '#004be3' : 'rgba(0,75,227,0.15)'"
+               style="min-height: 8px; cursor: pointer;">
+          </div>
+          <span class="text-[10px] font-semibold" style="color: var(--on-surface-variant);">{{ d.label }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Products -->
+    <div *ngIf="metrics" class="card p-5">
+      <h2 class="font-bold text-base mb-4" style="font-family: 'Manrope', sans-serif;">Top Produtos</h2>
+      <div class="space-y-3">
+        <div *ngFor="let p of metrics.topProducts; let i = index" class="flex items-center gap-3">
+          <div class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+               [style.background]="i === 0 ? '#004be3' : i === 1 ? '#819bff' : '#eae7e7'"
+               [style.color]="i < 2 ? '#fff' : '#6b6868'">
+            {{ i + 1 }}
+          </div>
+          <img [src]="p.image" [alt]="p.name" class="w-9 h-9 rounded-lg object-cover flex-shrink-0">
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-semibold truncate">{{ p.name }}</p>
+            <p class="text-[10px]" style="color: var(--on-surface-variant);">{{ p.sales }} vendas</p>
+          </div>
+          <span class="text-xs font-bold flex-shrink-0" style="color: #004be3;">{{ p.revenue | currencyBr }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Orders Table -->
+  <div class="card p-5">
+    <div class="flex items-center justify-between mb-5">
+      <h2 class="font-bold text-base" style="font-family: 'Manrope', sans-serif;">Pedidos Recentes</h2>
+      <a routerLink="/admin/orders" class="btn-ghost btn-sm text-xs">Ver todos</a>
+    </div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>ID do Pedido</th>
+            <th>Cliente</th>
+            <th>Data</th>
+            <th>Status</th>
+            <th>Valor Total</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of recentOrders">
+            <td>
+              <span class="font-bold text-sm" style="color: #004be3;">{{ order.orderNumber }}</span>
+            </td>
+            <td>
+              <div class="flex items-center gap-2">
+                <div class="avatar avatar-sm" style="background: linear-gradient(135deg, #eae7e7, #dfdcdc);">
+                  {{ order.customerName.charAt(0) }}
+                </div>
+                <span class="text-sm font-medium">{{ order.customerName }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="text-sm" style="color: var(--on-surface-variant);">{{ order.createdAt | date:'dd/MM/yyyy' }}</span>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="'status-' + order.status">{{ getStatusLabel(order.status) }}</span>
+            </td>
+            <td>
+              <span class="font-semibold text-sm">{{ order.total | currencyBr }}</span>
+            </td>
+            <td>
+              <button class="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[var(--surface-low)]" style="color: var(--on-surface-variant);">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div *ngIf="metrics" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+    <!-- Sales by Category -->
+    <div class="card p-5">
+      <h2 class="font-bold text-base mb-4" style="font-family: 'Manrope', sans-serif;">Vendas por Categoria</h2>
+      <div class="space-y-3">
+        <div *ngFor="let cat of metrics.salesByCategory" class="space-y-1">
+          <div class="flex items-center justify-between text-sm">
+            <span class="font-medium">{{ cat.category }}</span>
+            <span class="font-semibold">{{ cat.percent }}%</span>
+          </div>
+          <div class="h-2 rounded-full" style="background: var(--surface-container);">
+            <div class="h-2 rounded-full transition-all" style="background: linear-gradient(90deg, #004be3, #819bff);"
+                 [style.width.%]="cat.percent">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Automated Rules -->
+    <div class="card p-5" style="background: linear-gradient(135deg, #3730a3 0%, #004be3 100%);">
+      <h2 class="font-bold text-base mb-2 text-white" style="font-family: 'Manrope', sans-serif;">Regras Automáticas</h2>
+      <p class="text-white/70 text-sm mb-6">O sistema está auto-atribuindo parceiros de entrega com base na eficiência regional.</p>
+      <div class="mb-4">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-white/80 text-xs font-semibold uppercase tracking-wide">OTIMIZAÇÃO</span>
+          <span class="text-white font-bold">94%</span>
+        </div>
+        <div class="h-2 rounded-full bg-white/20">
+          <div class="h-2 rounded-full bg-white" style="width: 94%;"></div>
+        </div>
+      </div>
+      <button class="w-full py-2.5 rounded-xl text-sm font-semibold transition-all" style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.2);">
+        Configurar Fluxos
+      </button>
+    </div>
+  </div>
+
+  <!-- Low Stock Warning -->
+  <div *ngIf="metrics && metrics.lowStockProducts > 0" class="card p-4 flex items-center gap-3" style="border-left: 3px solid #7a5900; background: rgba(255,223,158,0.2);">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7a5900" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <div class="flex-1">
+      <p class="text-sm font-semibold" style="color: #7a5900;">{{ metrics.lowStockProducts }} produto(s) com estoque baixo</p>
+      <p class="text-xs" style="color: #7a5900; opacity: 0.8;">Revise e reabasteca para evitar ruptura.</p>
+    </div>
+    <a routerLink="/admin/products" class="btn-sm text-xs" style="background: #ffdf9e; color: #7a5900; padding: 0.375rem 0.875rem; border-radius: 0.5rem; font-weight: 600;">
+      Ver Produtos
+    </a>
+  </div>
+</div>

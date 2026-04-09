@@ -1,0 +1,169 @@
+<div class="space-y-5">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <button class="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-[var(--surface-container)]"
+              (click)="cancel()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div>
+        <h1 style="font-family: 'Manrope', sans-serif; font-size: 1.5rem; font-weight: 800;">
+          {{ isEdit ? 'Editar Produto' : 'Novo Produto' }}
+        </h1>
+        <p class="text-xs mt-0.5" style="color: var(--on-surface-variant);">
+          {{ isEdit ? 'Atualize os dados do produto' : 'Preencha os dados para cadastrar um novo produto' }}
+        </p>
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button class="btn-secondary btn-sm" (click)="cancel()">Descartar</button>
+      <button class="btn-primary btn-sm" (click)="save()" [disabled]="isSaving">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        {{ isSaving ? 'Salvando...' : 'Salvar Produto' }}
+      </button>
+    </div>
+  </div>
+
+  <app-loading-spinner *ngIf="isLoading" [fullPage]="true"></app-loading-spinner>
+
+  <form *ngIf="!isLoading" [formGroup]="form">
+    <!-- Step 1: Media -->
+    <div class="card p-5 mb-4">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-bold text-base" style="font-family: 'Manrope', sans-serif;">Mídia do Produto</h2>
+        <span class="text-xs" style="color: var(--on-surface-variant);">PASSO 1 DE 3</span>
+      </div>
+      <app-image-uploader [(images)]="uploadedImages" label="Carregar imagens do produto"></app-image-uploader>
+    </div>
+
+    <!-- Step 2: General Info -->
+    <div class="card p-5 mb-4">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-bold text-base" style="font-family: 'Manrope', sans-serif;">Informações Gerais</h2>
+        <span class="text-xs" style="color: var(--on-surface-variant);">PASSO 2 DE 3</span>
+      </div>
+      <div class="space-y-4">
+        <div class="form-group">
+          <label class="form-label">Nome do Produto *</label>
+          <input type="text" class="form-input" formControlName="name" placeholder="ex. Vaso Cerâmica Minimalista">
+          <p *ngIf="form.get('name')?.touched && form.get('name')?.invalid" class="form-error">Nome é obrigatório</p>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="form-group">
+            <label class="form-label">Slug (URL)</label>
+            <input type="text" class="form-input" formControlName="slug" placeholder="auto-gerado">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Categoria *</label>
+            <select class="form-select" formControlName="categoryId">
+              <option value="">Selecionar categoria</option>
+              <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Descrição Curta *</label>
+          <input type="text" class="form-input" formControlName="shortDescription" placeholder="Uma linha descrevendo o produto">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Descrição Completa *</label>
+          <textarea class="form-textarea" formControlName="description" rows="5"
+                    placeholder="Descreva o artesanato, materiais e história por trás desta peça..."></textarea>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="form-group">
+            <label class="form-label">Marca</label>
+            <input type="text" class="form-input" formControlName="brand" placeholder="Nome da marca">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tags (separar por vírgula)</label>
+            <input type="text" class="form-input" formControlName="tags" placeholder="moda, verao, luxo">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Pricing & Inventory -->
+    <div class="card p-5 mb-4">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-bold text-base" style="font-family: 'Manrope', sans-serif;">Inventário & Preços</h2>
+        <span class="text-xs" style="color: var(--on-surface-variant);">PASSO 3 DE 3</span>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-group">
+          <label class="form-label">Preço de Venda (R$) *</label>
+          <input type="number" class="form-input" formControlName="price" min="0" step="0.01" placeholder="0,00">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Preço Original (opcional)</label>
+          <input type="number" class="form-input" formControlName="originalPrice" min="0" step="0.01" placeholder="Para mostrar desconto">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tipo de Preço</label>
+          <select class="form-select" formControlName="priceType">
+            <option value="standard">Padrão</option>
+            <option value="promotional">Promocional</option>
+            <option value="flash_sale">Flash Sale</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estoque</label>
+          <input type="number" class="form-input" formControlName="stock" min="0" placeholder="0">
+        </div>
+      </div>
+
+      <!-- Toggles -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
+        <div *ngFor="let toggle of [
+          {key: 'isActive', label: 'Produto Ativo'},
+          {key: 'isFeatured', label: 'Em Destaque'},
+          {key: 'isLimitedEdition', label: 'Edição Limitada'},
+          {key: 'isNewArrival', label: 'Nova Chegada'},
+          {key: 'isPremiumPlacement', label: 'Destaque Premium'}
+        ]" class="flex items-center justify-between p-3 rounded-xl" style="background: var(--surface-low);">
+          <span class="text-xs font-semibold">{{ toggle.label }}</span>
+          <label class="toggle">
+            <input type="checkbox" [formControlName]="toggle.key">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fiscal Data -->
+    <div class="card p-5 mb-4">
+      <h2 class="font-bold text-base mb-4" style="font-family: 'Manrope', sans-serif;">Dados Fiscais</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <div class="form-group">
+          <label class="form-label">SKU *</label>
+          <input type="text" class="form-input" formControlName="sku" placeholder="PROD-001">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Código de Barras</label>
+          <input type="text" class="form-input" formControlName="barcode" placeholder="EAN-13">
+        </div>
+        <div class="form-group">
+          <label class="form-label">NCM</label>
+          <input type="text" class="form-input" formControlName="ncm" placeholder="0000.00.00">
+        </div>
+      </div>
+    </div>
+
+    <!-- SEO -->
+    <div class="card p-5">
+      <h2 class="font-bold text-base mb-4" style="font-family: 'Manrope', sans-serif;">SEO</h2>
+      <div class="space-y-4">
+        <div class="form-group">
+          <label class="form-label">Meta Título</label>
+          <input type="text" class="form-input" formControlName="metaTitle" placeholder="Título para motores de busca">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Meta Descrição</label>
+          <textarea class="form-textarea" formControlName="metaDescription" rows="2"
+                    placeholder="Descrição para motores de busca (max 160 caracteres)"></textarea>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
